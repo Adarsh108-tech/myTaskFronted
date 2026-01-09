@@ -13,20 +13,9 @@ export default function AuthForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Login state
-  const [loginData, setLoginData] = useState({
-    email: "",
-    password: "",
-  });
+  const [loginData, setLoginData] = useState({ email: "", password: "" });
+  const [signupData, setSignupData] = useState({ name: "", email: "", password: "" });
 
-  // Signup state
-  const [signupData, setSignupData] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
-
-  /* ---------------- LOGIN ---------------- */
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -40,13 +29,9 @@ export default function AuthForm() {
       });
 
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.message || "Login failed");
 
-      // Save token
       localStorage.setItem("token", data.token);
-
-      // Redirect after login
       router.push("/v/dashboard");
     } catch (err) {
       setError(err.message);
@@ -55,7 +40,6 @@ export default function AuthForm() {
     }
   };
 
-  /* ---------------- SIGNUP ---------------- */
   const handleSignup = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -69,10 +53,8 @@ export default function AuthForm() {
       });
 
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.message || "Signup failed");
 
-      // Auto switch to login
       setIsLogin(true);
     } catch (err) {
       setError(err.message);
@@ -82,76 +64,69 @@ export default function AuthForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4 transition-all duration-500">
-      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-2">
-
-        {/* LEFT */}
-        <div className="hidden md:flex flex-col justify-center items-center bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-10">
-          <Image src="/auth-image.png" alt="Company" width={280} height={280} />
-          <h1 className="text-3xl font-bold mt-6">Your Company</h1>
-          <p className="text-center text-sm text-indigo-100 mt-2">
-            Secure authentication made simple.
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+      <div className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-2 transition-all duration-500">
+        
+        {/* LEFT IMAGE PANEL */}
+        <div className="hidden md:flex flex-col justify-center items-center bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-12">
+          <Image src="/auth-image.png" alt="Company" width={300} height={300} className="rounded-full shadow-lg" />
+          <h1 className="text-4xl font-extrabold mt-6">Your Company</h1>
+          <p className="text-center text-lg text-indigo-100 mt-3">
+            Secure authentication, simple and fast.
           </p>
         </div>
 
-        {/* RIGHT */}
-        <div className="p-8 md:p-12 relative">
-          {/* TOGGLE */}
-          <div className="flex justify-center mb-8">
+        {/* RIGHT FORM PANEL */}
+        <div className="p-8 md:p-12 flex flex-col justify-center relative">
+          {/* TOGGLE BUTTONS */}
+          <div className="flex justify-center mb-8 bg-gray-100 rounded-lg p-1">
             <button
               onClick={() => setIsLogin(true)}
-              className={`px-6 py-2 rounded-l-lg ${
-                isLogin ? "bg-indigo-600 text-white" : "bg-gray-200"
+              className={`flex-1 py-2 font-semibold rounded-l-lg transition-colors ${
+                isLogin ? "bg-indigo-600 text-white shadow-md" : "text-gray-600 hover:bg-gray-200"
               }`}
             >
               Login
             </button>
             <button
               onClick={() => setIsLogin(false)}
-              className={`px-6 py-2 rounded-r-lg ${
-                !isLogin ? "bg-indigo-600 text-white" : "bg-gray-200"
+              className={`flex-1 py-2 font-semibold rounded-r-lg transition-colors ${
+                !isLogin ? "bg-indigo-600 text-white shadow-md" : "text-gray-600 hover:bg-gray-200"
               }`}
             >
               Sign Up
             </button>
           </div>
 
-          {error && (
-            <p className="text-red-500 text-center mb-4">{error}</p>
-          )}
+          {/* ERROR MESSAGE */}
+          {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 
           {/* LOGIN FORM */}
           {isLogin && (
             <form onSubmit={handleLogin} className="space-y-5">
-              <h2 className="text-2xl font-bold text-center">
-                Welcome Back 👋
-              </h2>
-
+              <h2 className="text-2xl font-bold text-center text-gray-800">Welcome Back 👋</h2>
+              
               <input
                 type="email"
                 placeholder="Email"
                 value={loginData.email}
-                onChange={(e) =>
-                  setLoginData({ ...loginData, email: e.target.value })
-                }
-                className="w-full px-4 py-3 border rounded-lg"
+                onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
                 required
               />
-
               <input
                 type="password"
                 placeholder="Password"
                 value={loginData.password}
-                onChange={(e) =>
-                  setLoginData({ ...loginData, password: e.target.value })
-                }
-                className="w-full px-4 py-3 border rounded-lg"
+                onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
                 required
               />
 
               <button
+                type="submit"
                 disabled={loading}
-                className="w-full bg-indigo-600 text-white py-3 rounded-lg"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition duration-300 shadow-md"
               >
                 {loading ? "Logging in..." : "Login"}
               </button>
@@ -161,46 +136,37 @@ export default function AuthForm() {
           {/* SIGNUP FORM */}
           {!isLogin && (
             <form onSubmit={handleSignup} className="space-y-5">
-              <h2 className="text-2xl font-bold text-center">
-                Create Account 🚀
-              </h2>
+              <h2 className="text-2xl font-bold text-center text-gray-800">Create Account 🚀</h2>
 
               <input
                 type="text"
                 placeholder="Full Name"
                 value={signupData.name}
-                onChange={(e) =>
-                  setSignupData({ ...signupData, name: e.target.value })
-                }
-                className="w-full px-4 py-3 border rounded-lg"
+                onChange={(e) => setSignupData({ ...signupData, name: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
                 required
               />
-
               <input
                 type="email"
                 placeholder="Email"
                 value={signupData.email}
-                onChange={(e) =>
-                  setSignupData({ ...signupData, email: e.target.value })
-                }
-                className="w-full px-4 py-3 border rounded-lg"
+                onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
                 required
               />
-
               <input
                 type="password"
                 placeholder="Password"
                 value={signupData.password}
-                onChange={(e) =>
-                  setSignupData({ ...signupData, password: e.target.value })
-                }
-                className="w-full px-4 py-3 border rounded-lg"
+                onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
                 required
               />
 
               <button
+                type="submit"
                 disabled={loading}
-                className="w-full bg-indigo-600 text-white py-3 rounded-lg"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition duration-300 shadow-md"
               >
                 {loading ? "Creating..." : "Sign Up"}
               </button>
