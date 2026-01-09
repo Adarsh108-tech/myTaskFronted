@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
-const API_URL = "https://mytaskmanager-je58.onrender.com";
+const API_URL = process.env.NEXT_PUBLIC_DATABASE_URL;
 
 export default function AuthForm() {
   const router = useRouter();
