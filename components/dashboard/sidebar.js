@@ -3,8 +3,13 @@
 import { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-export default function Sidebar({ open, setOpen , setProfileOpen , userName , profilePicture}) {
+import { FiLogOut } from "react-icons/fi";
+
+export default function Sidebar({ open, setOpen, setProfileOpen, userName, profilePicture }) {
+  const router = useRouter();
+
   // Prevent scrolling when sidebar is open
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "auto";
@@ -12,6 +17,12 @@ export default function Sidebar({ open, setOpen , setProfileOpen , userName , pr
       document.body.style.overflow = "auto";
     };
   }, [open]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token"); // adjust key if different
+    setOpen(false);
+    router.push("/");
+  };
 
   return (
     <>
@@ -48,7 +59,7 @@ export default function Sidebar({ open, setOpen , setProfileOpen , userName , pr
         </div>
 
         {/* Menu */}
-        <div className="flex flex-col gap-3 mt-4">
+        <div className="flex flex-col gap-3 mt-4 flex-1">
           <Link href="/v/history">
             <Button
               variant="ghost"
@@ -59,17 +70,27 @@ export default function Sidebar({ open, setOpen , setProfileOpen , userName , pr
             </Button>
           </Link>
 
-            <Button
+          <Button
             variant="ghost"
             className="w-full justify-start text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
             onClick={() => {
-                setProfileOpen(true);
-                setOpen(false); // close sidebar if needed
+              setProfileOpen(true);
+              setOpen(false);
             }}
-            >
+          >
             Profile Settings
-            </Button>
+          </Button>
         </div>
+
+        {/* Logout Button */}
+        <Button
+          variant="destructive"
+          className="mt-auto flex items-center gap-2 justify-start"
+          onClick={handleLogout}
+        >
+          <FiLogOut size={18} />
+          Logout
+        </Button>
       </aside>
     </>
   );
