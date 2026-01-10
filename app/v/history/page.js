@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
 import {
   Card,
@@ -8,10 +8,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { authFetch } from "@/lib/api"; // same helper as in Dashboard
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { authFetch } from "@/lib/api";
 
 export default function History() {
   const [completedTasks, setCompletedTasks] = useState([]);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("all");
 
   useEffect(() => {
     const fetchTaskHistory = async () => {
@@ -27,8 +37,24 @@ export default function History() {
     fetchTaskHistory();
   }, []);
 
-  /* -------- GROUP TASKS BY DATE -------- */
-  const groupedByDate = completedTasks.reduce((acc, task) => {
+  /* -------- APPLY SEARCH + FILTER -------- */
+  const filteredTasks = useMemo(() => {
+    return completedTasks.filter((task) => {
+      const matchesSearch = task.task
+        .toLowerCase()
+        .includes(search.toLowerCase());
+
+      const matchesFilter =
+        filter === "all" ||
+        (filter === "withImage" && task.image) ||
+        (filter === "noImage" && !task.image);
+
+      return matchesSearch && matchesFilter;
+    });
+  }, [completedTasks, search, filter]);
+
+  /* -------- GROUP BY DATE -------- */
+  const groupedByDate = filteredTasks.reduce((acc, task) => {
     if (!acc[task.date]) acc[task.date] = [];
     acc[task.date].push(task);
     return acc;
@@ -36,29 +62,46 @@ export default function History() {
 
   return (
     <div className="min-h-screen bg-muted/40 p-6">
-      <h1 className="text-2xl font-bold mb-8">Task History</h1>
+      <h1 className="text-2xl font-bold mb-6">Task History</h1>
 
-      {completedTasks.length === 0 ? (
+      {/* SEARCH + FILTER BAR */}
+      <div className="flex flex-col md:flex-row gap-4 mb-8">
+        <Input
+          placeholder="Search tasks..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="md:w-1/2"
+        />
+
+        <Select value={filter} onValueChange={setFilter}>
+          <SelectTrigger className="md:w-1/4">
+            <SelectValue placeholder="Filter" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Tasks</SelectItem>
+            <SelectItem value="withImage">With Image</SelectItem>
+            <SelectItem value="noImage">No Image</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {filteredTasks.length === 0 ? (
         <p className="text-center text-gray-500 mt-10">
-          Do some tasks first man! 📝
+          No tasks match your search 😅
         </p>
       ) : (
         <div className="space-y-10">
           {Object.entries(groupedByDate).map(([date, tasks]) => (
             <div key={date}>
-              {/* DATE HEADER */}
               <h2 className="text-lg font-semibold mb-4 text-primary">
                 {new Date(date).toDateString()}
               </h2>
 
-              {/* ONE-LINE TASK ROW */}
               <div className="flex gap-4 overflow-x-auto pb-3">
                 {tasks.map((task) => (
                   <Card key={task._id} className="min-w-[220px] shrink-0">
                     <CardHeader>
-                      <CardTitle className="text-sm">
-                        {task.task}
-                      </CardTitle>
+                      <CardTitle className="text-sm">{task.task}</CardTitle>
                     </CardHeader>
 
                     <CardContent className="flex flex-col items-center gap-2">
