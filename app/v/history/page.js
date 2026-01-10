@@ -28,9 +28,10 @@ export default function History() {
       try {
         const res = await authFetch("/GetTaskHistory");
         const data = await res.json();
-        setCompletedTasks(data || []);
+        setCompletedTasks(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Failed to load task history:", err);
+        setCompletedTasks([]);
       }
     };
 
@@ -40,14 +41,15 @@ export default function History() {
   /* -------- APPLY SEARCH + FILTER -------- */
   const filteredTasks = useMemo(() => {
     return completedTasks.filter((task) => {
-      const matchesSearch = task.task
+      const taskName = task?.task || "";
+      const matchesSearch = taskName
         .toLowerCase()
         .includes(search.toLowerCase());
 
       const matchesFilter =
         filter === "all" ||
-        (filter === "withImage" && task.image) ||
-        (filter === "noImage" && !task.image);
+        (filter === "withImage" && !!task?.image) ||
+        (filter === "noImage" && !task?.image);
 
       return matchesSearch && matchesFilter;
     });
@@ -55,8 +57,9 @@ export default function History() {
 
   /* -------- GROUP BY DATE -------- */
   const groupedByDate = filteredTasks.reduce((acc, task) => {
-    if (!acc[task.date]) acc[task.date] = [];
-    acc[task.date].push(task);
+    const dateKey = task?.date || "unknown";
+    if (!acc[dateKey]) acc[dateKey] = [];
+    acc[dateKey].push(task);
     return acc;
   }, {});
 
@@ -87,28 +90,32 @@ export default function History() {
 
       {filteredTasks.length === 0 ? (
         <p className="text-center text-gray-500 mt-10">
-          No tasks match your search 
+          No tasks match your search
         </p>
       ) : (
         <div className="space-y-10">
           {Object.entries(groupedByDate).map(([date, tasks]) => (
             <div key={date}>
               <h2 className="text-lg font-semibold mb-4 text-primary">
-                {new Date(date).toDateString()}
+                {date === "unknown"
+                  ? "Unknown Date"
+                  : new Date(date).toDateString()}
               </h2>
 
               <div className="flex gap-4 overflow-x-auto pb-3">
                 {tasks.map((task) => (
-                  <Card key={task._id} className="min-w-[220px] shrink-0">
+                  <Card key={task?._id || Math.random()} className="min-w-[220px] shrink-0">
                     <CardHeader>
-                      <CardTitle className="text-sm">{task.task}</CardTitle>
+                      <CardTitle className="text-sm">
+                        {task?.task || "Untitled Task"}
+                      </CardTitle>
                     </CardHeader>
 
                     <CardContent className="flex flex-col items-center gap-2">
-                      {task.image ? (
+                      {task?.image ? (
                         <Image
                           src={task.image}
-                          alt={task.task}
+                          alt={task?.task || "Task image"}
                           width={180}
                           height={120}
                           className="rounded-md object-cover"
