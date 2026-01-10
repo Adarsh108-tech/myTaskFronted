@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
 import {
   Card,
@@ -8,10 +8,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { authFetch } from "@/lib/api"; // same helper as in Dashboard
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { authFetch } from "@/lib/api";
 
 export default function History() {
   const [completedTasks, setCompletedTasks] = useState([]);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("all");
+  const [selectedDate, setSelectedDate] = useState("");
 
   useEffect(() => {
     const fetchTaskHistory = async () => {
@@ -23,35 +28,92 @@ export default function History() {
         console.error("Failed to load task history:", err);
       }
     };
-
     fetchTaskHistory();
   }, []);
 
-  /* -------- GROUP TASKS BY DATE -------- */
-  const groupedByDate = completedTasks.reduce((acc, task) => {
+  /* -------- FILTER TASKS -------- */
+  const filteredTasks = useMemo(() => {
+    return completedTasks.filter((task) => {
+      const matchSearch = task.task
+        .toLowerCase()
+        .includes(search.toLowerCase());
+
+      const matchStatus =
+        status === "all"
+          ? true
+          : status === "completed"
+          ? task.completed
+          : !task.completed;
+
+      const matchDate = selectedDate
+        ? task.date === selectedDate
+        : true;
+
+      return matchSearch && matchStatus && matchDate;
+    });
+  }, [completedTasks, search, status, selectedDate]);
+
+  /* -------- GROUP BY DATE -------- */
+  const groupedByDate = filteredTasks.reduce((acc, task) => {
     if (!acc[task.date]) acc[task.date] = [];
     acc[task.date].push(task);
     return acc;
   }, {});
 
+  /* UNIQUE DATES FOR FILTER */
+  const uniqueDates = [...new Set(completedTasks.map(t => t.date))];
+
   return (
     <div className="min-h-screen bg-muted/40 p-6">
-      <h1 className="text-2xl font-bold mb-8">Task History</h1>
+      <h1 className="text-2xl font-bold mb-6">Task History</h1>
 
-      {completedTasks.length === 0 ? (
+      {/* FILTER BAR */}
+      <div className="flex flex-wrap gap-4 mb-8">
+        <Input
+          placeholder="Search task..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="max-w-xs"
+        />
+
+        <Select value={status} onValueChange={setStatus}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={selectedDate} onValueChange={setSelectedDate}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filter by date" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All Dates</SelectItem>
+            {uniqueDates.map((d) => (
+              <SelectItem key={d} value={d}>
+                {new Date(d).toDateString()}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {filteredTasks.length === 0 ? (
         <p className="text-center text-gray-500 mt-10">
-          Do some tasks first man! 📝
+          No tasks match your filters 😅
         </p>
       ) : (
         <div className="space-y-10">
           {Object.entries(groupedByDate).map(([date, tasks]) => (
             <div key={date}>
-              {/* DATE HEADER */}
               <h2 className="text-lg font-semibold mb-4 text-primary">
                 {new Date(date).toDateString()}
               </h2>
 
-              {/* ONE-LINE TASK ROW */}
               <div className="flex gap-4 overflow-x-auto pb-3">
                 {tasks.map((task) => (
                   <Card key={task._id} className="min-w-[220px] shrink-0">
@@ -75,8 +137,14 @@ export default function History() {
                           No Image
                         </div>
                       )}
-                      <span className="text-xs text-green-600 font-medium">
-                        ✔ Completed
+                      <span
+                        className={`text-xs font-medium ${
+                          task.completed
+                            ? "text-green-600"
+                            : "text-yellow-600"
+                        }`}
+                      >
+                        {task.completed ? "✔ Completed" : "⏳ Pending"}
                       </span>
                     </CardContent>
                   </Card>
