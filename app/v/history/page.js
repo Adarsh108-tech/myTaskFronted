@@ -126,7 +126,7 @@ export default function History() {
                         </div>
                       )}
                       <span className="text-xs text-green-600 font-medium">
-                        ✔ Completed
+                        Completed
                       </span>
                     </CardContent>
                   </Card>
