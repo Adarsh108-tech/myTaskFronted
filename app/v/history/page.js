@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
   Card,
@@ -8,114 +8,64 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { authFetch } from "@/lib/api";
+import { authFetch } from "@/lib/api"; // same helper as in Dashboard
 
 export default function History() {
   const [completedTasks, setCompletedTasks] = useState([]);
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all");
 
   useEffect(() => {
     const fetchTaskHistory = async () => {
       try {
         const res = await authFetch("/GetTaskHistory");
         const data = await res.json();
-        setCompletedTasks(Array.isArray(data) ? data : []);
+        setCompletedTasks(data || []);
       } catch (err) {
         console.error("Failed to load task history:", err);
-        setCompletedTasks([]);
       }
     };
 
     fetchTaskHistory();
   }, []);
 
-  /* -------- APPLY SEARCH + FILTER -------- */
-  const filteredTasks = useMemo(() => {
-    return completedTasks.filter((task) => {
-      const taskName = task?.task || "";
-      const matchesSearch = taskName
-        .toLowerCase()
-        .includes(search.toLowerCase());
-
-      const matchesFilter =
-        filter === "all" ||
-        (filter === "withImage" && !!task?.image) ||
-        (filter === "noImage" && !task?.image);
-
-      return matchesSearch && matchesFilter;
-    });
-  }, [completedTasks, search, filter]);
-
-  /* -------- GROUP BY DATE -------- */
-  const groupedByDate = filteredTasks.reduce((acc, task) => {
-    const dateKey = task?.date || "unknown";
-    if (!acc[dateKey]) acc[dateKey] = [];
-    acc[dateKey].push(task);
+  /* -------- GROUP TASKS BY DATE -------- */
+  const groupedByDate = completedTasks.reduce((acc, task) => {
+    if (!acc[task.date]) acc[task.date] = [];
+    acc[task.date].push(task);
     return acc;
   }, {});
 
   return (
     <div className="min-h-screen bg-muted/40 p-6">
-      <h1 className="text-2xl font-bold mb-6">Task History</h1>
+      <h1 className="text-2xl font-bold mb-8">Task History</h1>
 
-      {/* SEARCH + FILTER BAR */}
-      <div className="flex flex-col md:flex-row gap-4 mb-8">
-        <Input
-          placeholder="Search tasks..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="md:w-1/2"
-        />
-
-        <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="md:w-1/4">
-            <SelectValue placeholder="Filter" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Tasks</SelectItem>
-            <SelectItem value="withImage">With Image</SelectItem>
-            <SelectItem value="noImage">No Image</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {filteredTasks.length === 0 ? (
+      {completedTasks.length === 0 ? (
         <p className="text-center text-gray-500 mt-10">
-          No tasks match your search
+          Do some tasks first man! 📝
         </p>
       ) : (
         <div className="space-y-10">
           {Object.entries(groupedByDate).map(([date, tasks]) => (
             <div key={date}>
+              {/* DATE HEADER */}
               <h2 className="text-lg font-semibold mb-4 text-primary">
-                {date === "unknown"
-                  ? "Unknown Date"
-                  : new Date(date).toDateString()}
+                {new Date(date).toDateString()}
               </h2>
 
+              {/* ONE-LINE TASK ROW */}
               <div className="flex gap-4 overflow-x-auto pb-3">
                 {tasks.map((task) => (
-                  <Card key={task?._id || Math.random()} className="min-w-[220px] shrink-0">
+                  <Card key={task._id} className="min-w-[220px] shrink-0">
                     <CardHeader>
                       <CardTitle className="text-sm">
-                        {task?.task || "Untitled Task"}
+                        {task.task}
                       </CardTitle>
                     </CardHeader>
 
                     <CardContent className="flex flex-col items-center gap-2">
-                      {task?.image ? (
+                      {task.image ? (
                         <Image
                           src={task.image}
-                          alt={task?.task || "Task image"}
+                          alt={task.task}
                           width={180}
                           height={120}
                           className="rounded-md object-cover"
@@ -126,7 +76,7 @@ export default function History() {
                         </div>
                       )}
                       <span className="text-xs text-green-600 font-medium">
-                        Completed
+                        ✔ Completed
                       </span>
                     </CardContent>
                   </Card>
