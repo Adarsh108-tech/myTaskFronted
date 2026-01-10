@@ -87,7 +87,7 @@ export default function History() {
 
       {filteredTasks.length === 0 ? (
         <p className="text-center text-gray-500 mt-10">
-          No tasks match your search 😅
+          No tasks match your search 
         </p>
       ) : (
         <div className="space-y-10">
