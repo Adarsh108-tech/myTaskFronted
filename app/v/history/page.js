@@ -9,14 +9,20 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { authFetch } from "@/lib/api";
 
 export default function History() {
   const [completedTasks, setCompletedTasks] = useState([]);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
-  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedDate, setSelectedDate] = useState("all");
 
   useEffect(() => {
     const fetchTaskHistory = async () => {
@@ -45,9 +51,10 @@ export default function History() {
           ? task.completed
           : !task.completed;
 
-      const matchDate = selectedDate
-        ? task.date === selectedDate
-        : true;
+      const matchDate =
+        selectedDate === "all"
+          ? true
+          : task.date === selectedDate;
 
       return matchSearch && matchStatus && matchDate;
     });
@@ -61,7 +68,7 @@ export default function History() {
   }, {});
 
   /* UNIQUE DATES FOR FILTER */
-  const uniqueDates = [...new Set(completedTasks.map(t => t.date))];
+  const uniqueDates = [...new Set(completedTasks.map((t) => t.date))];
 
   return (
     <div className="min-h-screen bg-muted/40 p-6">
@@ -92,7 +99,7 @@ export default function History() {
             <SelectValue placeholder="Filter by date" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Dates</SelectItem>
+            <SelectItem value="all">All Dates</SelectItem>
             {uniqueDates.map((d) => (
               <SelectItem key={d} value={d}>
                 {new Date(d).toDateString()}
@@ -104,7 +111,7 @@ export default function History() {
 
       {filteredTasks.length === 0 ? (
         <p className="text-center text-gray-500 mt-10">
-          No tasks match your filters 😅
+          No tasks match your filters
         </p>
       ) : (
         <div className="space-y-10">
