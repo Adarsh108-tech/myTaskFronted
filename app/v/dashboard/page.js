@@ -150,9 +150,6 @@ export default function Dashboard() {
 
         const res = await authFetch("/TaskDoneUploadPicture", {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
           body: formData,
         });
 
