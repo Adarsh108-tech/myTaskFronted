@@ -148,7 +148,7 @@ export default function Dashboard() {
         formData.append("image", file);
         formData.append("taskId", taskId);
 
-        const res = await fetch("http://localhost:5000/TaskDoneUploadPicture", {
+        const res = await authFetch("/TaskDoneUploadPicture", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
